@@ -33,6 +33,9 @@ export default defineConfig(
       // Money maths must be explicit: no silent float coercion via `==`.
       eqeqeq: ['error', 'always'],
       '@typescript-eslint/consistent-type-imports': 'error',
+      // `import { type X }` leaves a side-effect import behind (verbatimModuleSyntax), which can drag zod
+      // into the editor bundle. Require `import type { X }` instead.
+      '@typescript-eslint/no-import-type-side-effects': 'error',
     },
   },
 );

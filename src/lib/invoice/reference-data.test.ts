@@ -34,5 +34,7 @@ describe('reference data', () => {
     expect(new Set(COUNTRY_CODES).size).toBe(COUNTRY_CODES.length);
     expect(countryName('GB')).toBe('United Kingdom');
     expect(countryName('not-a-region')).toBe('not-a-region');
+    const names = COUNTRY_CODES.map(countryName);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en'))); // listed alphabetically
   });
 });

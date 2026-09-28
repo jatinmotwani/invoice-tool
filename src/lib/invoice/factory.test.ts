@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { duplicateInvoice, newInvoice } from './factory';
 import { sampleInvoice } from './fixtures';
-import { defaultProfile, ProfileSchema } from './profile';
+import { defaultProfile } from './profile';
+import { ProfileSchema } from './profile-schema';
 import { InvoiceSchema } from './schema';
 
 const NOW = '2026-09-28T10:00:00.000Z';

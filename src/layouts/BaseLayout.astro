@@ -10,9 +10,12 @@ interface Props {
   description: string;
   /** Force noindex (e.g. 404) even when the site is indexable. */
   noindex?: boolean;
+  /** Wider container for pages with the side-by-side editor. */
+  wide?: boolean;
 }
 
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, wide = false } = Astro.props;
+const container = wide ? 'max-w-7xl' : 'max-w-5xl';
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/'), SITE_URL).href;
 const robots = SITE_INDEXABLE && !noindex ? 'index, follow' : 'noindex, nofollow';
 ---
@@ -39,17 +42,17 @@ const robots = SITE_INDEXABLE && !noindex ? 'index, follow' : 'noindex, nofollow
   </head>
   <body class="flex min-h-dvh flex-col">
     <header class="border-b border-slate-200">
-      <div class="mx-auto flex h-14 max-w-5xl items-center px-4">
+      <div class:list={['mx-auto flex h-14 items-center px-4', container]}>
         <a href="/" class="text-lg font-semibold text-slate-900">
           {BRAND_NAME}
         </a>
       </div>
     </header>
-    <main id="main" class="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+    <main id="main" class:list={['mx-auto w-full flex-1 px-4 py-6', container]}>
       <slot />
     </main>
     <footer class="border-t border-slate-200">
-      <div class="mx-auto max-w-5xl px-4 py-6 text-sm text-slate-600">
+      <div class:list={['mx-auto px-4 py-6 text-sm text-slate-600', container]}>
         <p>Your invoices never leave this device. Not tax advice.</p>
       </div>
     </footer>

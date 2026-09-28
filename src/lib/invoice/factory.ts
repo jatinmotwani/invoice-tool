@@ -1,6 +1,7 @@
 import { nextInvoiceNumber, type NumberedInvoice } from './numbering';
 import type { ClientRecord, Profile } from './profile';
-import { type Client, type Invoice, type Line, SCHEMA_VERSION } from './schema';
+import type { Client, Invoice, Line } from './schema';
+import { SCHEMA_VERSION } from './constants';
 import { dueDateFor } from './terms';
 
 export const EMPTY_CLIENT: Client = {

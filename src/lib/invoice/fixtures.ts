@@ -1,4 +1,5 @@
-import { SCHEMA_VERSION, type Invoice, type Line } from './schema';
+import type { Invoice, Line } from './schema';
+import { SCHEMA_VERSION } from './constants';
 
 /** Test/demo data. Also used by the static sample invoices on content pages. */
 export function sampleLine(overrides: Partial<Line> = {}): Line {

@@ -10,3 +10,30 @@
     @apply bg-white font-sans text-slate-900 antialiased;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  /* Print only the invoice, whatever else is on the page. */
+  body * {
+    visibility: hidden;
+  }
+  .invoice-paper,
+  .invoice-paper * {
+    visibility: visible;
+  }
+  .invoice-paper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

@@ -4,6 +4,8 @@ import type { InvoiceDb } from './db';
 
 /** Counters and flags kept on the device (never sent anywhere). */
 export interface MetaValues {
+  /** Invoice open in the editor. */
+  currentInvoiceId: string;
   lastBackupAt: string;
   invoicesSinceBackup: number;
   downloads: number;

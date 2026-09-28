@@ -1,16 +1,76 @@
-/** ISO 3166-1 alpha-2 codes offered for clients; names come from Intl.DisplayNames (built into browsers). */
-export const COUNTRY_CODES = (
-  'AE AR AT AU BD BE BH BR CA CH CL CN CO CZ DE DK EE EG ES FI FR GB GR HK HU ID IE IL IN IT JP KE KR KW LK LT LU ' +
-  'LV MU MX MY NG NL NO NP NZ OM PH PK PL PT QA RO SA SE SG TH TR TW UA US VN ZA'
-).split(' ');
+/**
+ * Countries offered for clients (ISO 3166-1 alpha-2), with fixed English names. A static table rather than
+ * Intl.DisplayNames: ICU data differs between Node (server render) and browsers, which breaks hydration.
+ */
+export const COUNTRIES: readonly (readonly [code: string, name: string])[] = [
+  ['AR', 'Argentina'],
+  ['AU', 'Australia'],
+  ['AT', 'Austria'],
+  ['BH', 'Bahrain'],
+  ['BD', 'Bangladesh'],
+  ['BE', 'Belgium'],
+  ['BR', 'Brazil'],
+  ['CA', 'Canada'],
+  ['CL', 'Chile'],
+  ['CN', 'China'],
+  ['CO', 'Colombia'],
+  ['CZ', 'Czechia'],
+  ['DK', 'Denmark'],
+  ['EG', 'Egypt'],
+  ['EE', 'Estonia'],
+  ['FI', 'Finland'],
+  ['FR', 'France'],
+  ['DE', 'Germany'],
+  ['GR', 'Greece'],
+  ['HK', 'Hong Kong'],
+  ['HU', 'Hungary'],
+  ['IN', 'India'],
+  ['ID', 'Indonesia'],
+  ['IE', 'Ireland'],
+  ['IL', 'Israel'],
+  ['IT', 'Italy'],
+  ['JP', 'Japan'],
+  ['KE', 'Kenya'],
+  ['KW', 'Kuwait'],
+  ['LV', 'Latvia'],
+  ['LT', 'Lithuania'],
+  ['LU', 'Luxembourg'],
+  ['MY', 'Malaysia'],
+  ['MU', 'Mauritius'],
+  ['MX', 'Mexico'],
+  ['NP', 'Nepal'],
+  ['NL', 'Netherlands'],
+  ['NZ', 'New Zealand'],
+  ['NG', 'Nigeria'],
+  ['NO', 'Norway'],
+  ['OM', 'Oman'],
+  ['PK', 'Pakistan'],
+  ['PH', 'Philippines'],
+  ['PL', 'Poland'],
+  ['PT', 'Portugal'],
+  ['QA', 'Qatar'],
+  ['RO', 'Romania'],
+  ['SA', 'Saudi Arabia'],
+  ['SG', 'Singapore'],
+  ['ZA', 'South Africa'],
+  ['KR', 'South Korea'],
+  ['ES', 'Spain'],
+  ['LK', 'Sri Lanka'],
+  ['SE', 'Sweden'],
+  ['CH', 'Switzerland'],
+  ['TW', 'Taiwan'],
+  ['TH', 'Thailand'],
+  ['TR', 'Türkiye'],
+  ['UA', 'Ukraine'],
+  ['AE', 'United Arab Emirates'],
+  ['GB', 'United Kingdom'],
+  ['US', 'United States'],
+  ['VN', 'Vietnam'],
+];
 
-let displayNames: Intl.DisplayNames | undefined;
+const NAMES = new Map(COUNTRIES);
+export const COUNTRY_CODES = COUNTRIES.map(([code]) => code);
 
 export function countryName(code: string): string {
-  try {
-    displayNames ??= new Intl.DisplayNames(['en'], { type: 'region' });
-    return displayNames.of(code) ?? code;
-  } catch {
-    return code;
-  }
+  return NAMES.get(code) ?? code;
 }

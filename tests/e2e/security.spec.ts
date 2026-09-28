@@ -14,9 +14,9 @@ for (const path of PAGES) {
   });
 }
 
-test('React island hydrates under the strict CSP', async ({ page }) => {
+test('the editor island hydrates under the strict CSP', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByTestId('hydration-probe')).toHaveText('hydrated');
+  await expect(page.getByRole('group', { name: 'Invoice editor' })).toBeEnabled();
   const csp = await page.locator('meta[http-equiv="content-security-policy"]').getAttribute('content');
   expect(csp).toContain("script-src 'self'");
   expect(csp).not.toContain('unsafe-inline');
