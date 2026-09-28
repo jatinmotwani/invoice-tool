@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getDb } from '../../lib/db/db';
 import { getMeta, setMeta } from '../../lib/db/repo';
-import { newInvoice } from '../../lib/invoice/factory';
+import { duplicateInvoice, newInvoice } from '../../lib/invoice/factory';
 import { localIsoDate } from '../../lib/invoice/format';
 import type { Invoice } from '../../lib/invoice/schema';
+import { shareMessage, whatsappUrl } from '../../lib/invoice/share';
 import { buildInvoiceView } from '../../lib/invoice/view';
 import InvoicePreview from '../preview/InvoicePreview';
 import { saveBlob } from './download';
 import { Button } from './fields';
 import { ISSUE_TEXT, MODE_SUMMARY } from './messages';
 import Adjustments from './sections/Adjustments';
+import Appearance from './sections/Appearance';
 import Business from './sections/Business';
 import Client from './sections/Client';
 import Details from './sections/Details';
 import Extras from './sections/Extras';
 import Items from './sections/Items';
 import Payment from './sections/Payment';
+import YourData, { BACKUP_NUDGE_EVERY, exportBackup, useBackupStatus } from './sections/YourData';
 import type { Preset } from './state';
 import { usePersistentEditor } from './usePersistentEditor';
 
@@ -30,8 +33,13 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
   const { state, dispatch, ready, status, loadError, flush } = usePersistentEditor(preset, today);
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [pdfState, setPdfState] = useState<'idle' | 'working' | 'error'>('idle');
+  /** Set when sharing needs one more tap (gesture expired) or when falling back to WhatsApp. */
+  const [shareReady, setShareReady] = useState<{ file: File; text: string; native: boolean } | null>(null);
   const view = useMemo(() => buildInvoiceView(state.invoice, { brandName }), [state.invoice, brandName]);
   const { tax } = view;
+  const [backup, refreshBackup] = useBackupStatus(state.savedRev);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const showNudge = ready && !loadError && !nudgeDismissed && backup.sinceBackup >= BACKUP_NUDGE_EVERY;
 
   // Warm the (large, lazy) PDF chunk once the user has saved something, so the first download is quick.
   useEffect(() => {
@@ -82,17 +90,67 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
     }
   }
 
-  function startNew() {
-    const existing = [
+  async function shareNow(file: File, text: string): Promise<void> {
+    try {
+      await navigator.share({ files: [file], title: file.name, text });
+      setShareReady(null);
+      void countDownload();
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return; // user closed the share sheet
+      // The tap "expired" while the PDF was being made: ask for one more tap.
+      setShareReady({ file, text, native: true });
+    }
+  }
+
+  async function share() {
+    setPdfState('working');
+    setShareReady(null);
+    try {
+      void flush();
+      const { blob, name } = await makePdf();
+      const file = new File([blob], name, { type: 'application/pdf' });
+      const text = shareMessage(view);
+      setPdfState('idle');
+      if (navigator.canShare?.({ files: [file] })) {
+        await shareNow(file, text);
+      } else {
+        // No file sharing (most desktops): save the PDF and offer WhatsApp with a prefilled message.
+        saveBlob(blob, name);
+        void countDownload();
+        setShareReady({ file, text, native: false });
+      }
+    } catch (err) {
+      console.warn('Share failed', err);
+      setPdfState('error');
+    }
+  }
+
+  function existingNumbers() {
+    return [
       ...state.saved.filter((s) => s.id !== state.invoice.id),
       ...(state.rev > 0 || state.saved.some((s) => s.id === state.invoice.id)
         ? [{ id: state.invoice.id, number: state.invoice.number, date: state.invoice.date }]
         : []),
     ];
+  }
+
+  function duplicate() {
+    void replaceWith(
+      duplicateInvoice(state.invoice, {
+        profile: state.profile,
+        existing: existingNumbers(),
+        today: localIsoDate(),
+        now: new Date().toISOString(),
+        newId: () => crypto.randomUUID(),
+      }),
+    );
+  }
+
+  function startNew() {
     void replaceWith(
       newInvoice({
         profile: state.profile,
-        existing,
+        existing: existingNumbers(),
         today: localIsoDate(),
         now: new Date().toISOString(),
         newId: () => crypto.randomUUID(),
@@ -137,6 +195,29 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
               </ul>
             )}
           </div>
+          {showNudge && (
+            <div
+              role="status"
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+            >
+              <p className="flex-1">
+                You’ve made {backup.sinceBackup} invoices since your last backup. They’re stored only on this
+                device.
+              </p>
+              <Button
+                onClick={() =>
+                  void exportBackup(flush)
+                    .then(refreshBackup)
+                    .catch(() => undefined)
+                }
+              >
+                Export backup
+              </Button>
+              <Button variant="ghost" onClick={() => setNudgeDismissed(true)} ariaLabel="Remind me later">
+                Later
+              </Button>
+            </div>
+          )}
           {loadError && (
             <p
               role="alert"
@@ -155,6 +236,8 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
             <Adjustments state={state} dispatch={dispatch} tax={tax} />
             <Payment state={state} dispatch={dispatch} tax={tax} upiWarning={view.upiWarning} />
             <Extras state={state} dispatch={dispatch} brandName={brandName} />
+            <Appearance state={state} dispatch={dispatch} />
+            {!loadError && <YourData status={backup} refresh={refreshBackup} flush={flush} />}
           </fieldset>
         </div>
 
@@ -168,6 +251,36 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
       </div>
 
       <div className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur print:hidden">
+        {shareReady && (
+          <div
+            role="status"
+            className="mb-3 flex flex-wrap items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-950"
+          >
+            {shareReady.native ? (
+              <>
+                <span>Your PDF is ready.</span>
+                <Button variant="primary" onClick={() => void shareNow(shareReady.file, shareReady.text)}>
+                  Share PDF
+                </Button>
+              </>
+            ) : (
+              <>
+                <span>PDF downloaded. Send it on WhatsApp and attach the file:</span>
+                <a
+                  href={whatsappUrl(shareReady.text)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center rounded-md bg-green-700 px-4 font-medium text-white hover:bg-green-800 focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
+                >
+                  Open WhatsApp
+                </a>
+              </>
+            )}
+            <Button variant="ghost" onClick={() => setShareReady(null)} ariaLabel="Dismiss">
+              ✕
+            </Button>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="primary"
@@ -176,11 +289,17 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
           >
             {pdfState === 'working' ? 'Preparing PDF…' : 'Download PDF'}
           </Button>
+          <Button onClick={() => void share()} disabled={!ready || pdfState === 'working'}>
+            Share
+          </Button>
           <Button onClick={() => window.print()} disabled={!ready}>
             Print
           </Button>
+          <Button onClick={duplicate} disabled={!ready}>
+            Duplicate
+          </Button>
           <Button onClick={startNew} disabled={!ready}>
-            New invoice
+            New
           </Button>
           <p className="ml-auto text-sm text-slate-600" aria-live="polite">
             {pdfState === 'error'

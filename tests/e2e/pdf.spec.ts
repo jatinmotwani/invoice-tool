@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
+import { editorReady } from './helpers';
 import { expect, test } from '@playwright/test';
 
 /** Decompress every FlateDecode stream in a PDF and return them as text. */
@@ -24,7 +25,7 @@ test('downloads an A4 PDF with embedded font and selectable ₹', async ({ page 
     if (/Content Security Policy|Refused/.test(m.text())) violations.push(m.text());
   });
   await page.goto('/');
-  await expect(page.getByRole('group', { name: 'Invoice editor' })).toBeEnabled();
+  await editorReady(page);
   await page.getByLabel('Your name or business name').fill('Asha Rao');
   await page.getByLabel('Client name').fill('Acme Pvt Ltd');
   await page.getByLabel('Description').first().fill('Logo design');

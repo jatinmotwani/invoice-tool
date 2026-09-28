@@ -1,3 +1,4 @@
+import { editorReady } from './helpers';
 import { expect, test } from '@playwright/test';
 
 const PAGES = ['/', '/does-not-exist'];
@@ -16,7 +17,7 @@ for (const path of PAGES) {
 
 test('the editor island hydrates under the strict CSP', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('group', { name: 'Invoice editor' })).toBeEnabled();
+  await editorReady(page);
   const csp = await page.locator('meta[http-equiv="content-security-policy"]').getAttribute('content');
   expect(csp).toContain("script-src 'self'");
   expect(csp).not.toContain('unsafe-inline');

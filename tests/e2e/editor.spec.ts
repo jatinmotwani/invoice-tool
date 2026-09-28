@@ -1,3 +1,4 @@
+import { editorReady } from './helpers';
 import { expect, type Page, test } from '@playwright/test';
 
 const GSTIN_MH = '27AAPFU0939F1ZV'; // valid checksum, Maharashtra
@@ -9,7 +10,7 @@ async function open(page: Page) {
   });
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
-  await expect(page.getByRole('group', { name: 'Invoice editor' })).toBeEnabled();
+  await editorReady(page);
   return errors;
 }
 
@@ -43,7 +44,7 @@ test('not GST-registered: plain invoice with UPI QR, saved across reloads', asyn
 
   await expect(page.getByText('Saved on this device', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('group', { name: 'Invoice editor' })).toBeEnabled();
+  await editorReady(page);
   await showEditor(page);
   await expect(page.getByLabel('Client name')).toHaveValue('Acme Pvt Ltd');
   expect(errors).toEqual([]);

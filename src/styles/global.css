@@ -37,3 +37,23 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* Accent swatches (static classes: inline style attributes are blocked by the CSP). */
+.swatch-blue {
+  background: #1d4ed8;
+}
+.swatch-indigo {
+  background: #4338ca;
+}
+.swatch-green {
+  background: #047857;
+}
+.swatch-red {
+  background: #be123c;
+}
+.swatch-amber {
+  background: #b45309;
+}
+.swatch-slate {
+  background: #334155;
+}
