@@ -5,7 +5,7 @@ Spec: `docs/SPEC.md` (source of truth). Plan and task list: `docs/PLAN.md`.
 
 ## Current milestone
 
-**M0 (scaffold), not started.** The plan is waiting for the owner's OK. Don't write code before that.
+**M1 (domain library).** M0 is done, except the owner's one-time Cloudflare Pages setup (`docs/DEPLOY.md`). Next task: see `docs/PLAN.md`.
 
 ## Stack
 
@@ -15,7 +15,8 @@ Spec: `docs/SPEC.md` (source of truth). Plan and task list: `docs/PLAN.md`.
 - Dexie 4 (IndexedDB), zod 4, qrcode.
 - @react-pdf/renderer 4, loaded with a dynamic `import()` only on the first PDF action. The Noto Sans subset font (includes ₹) is fetched only then.
 - Vitest (domain), Playwright (e2e, mobile + desktop), Lighthouse CI (mobile).
-- Hosting: Cloudflare Pages. Security headers and CSP live in `public/_headers`. Cloudflare Web Analytics is the only third-party script.
+- Hosting: Cloudflare Pages (`docs/DEPLOY.md`). CSP comes from Astro's `security.csp` (a hashed `<meta>` tag); other security headers are in `public/_headers`. Cloudflare Web Analytics is the only third-party script.
+- CSP rules: no inline `style=""` attributes (set dynamic styles through the CSSOM), no Shiki, no third-party hosts beyond the analytics beacon.
 - Node ≥ 22.12.
 
 ## Commands (created in M0)
@@ -30,7 +31,10 @@ npm run check        # typecheck + lint + test + build: the "green" gate for eve
 npm run test:e2e     # playwright (needs a build)
 npm run budget       # JS size budget check over dist/
 npm run lhci         # lighthouse CI (mobile) over dist/
+npm run serve        # serve dist/ like Cloudflare Pages (clean URLs, 404, _headers)
 ```
+
+In cloud sessions the SessionStart hook sets `PW_CHROMIUM_EXECUTABLE` and `CHROME_PATH` to the pre-installed Chromium.
 
 ## Conventions
 

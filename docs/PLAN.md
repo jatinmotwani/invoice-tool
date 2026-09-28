@@ -1,6 +1,6 @@
 # Plan
 
-Status: **PROPOSED, waiting for the owner's OK.** Once approved, tick off tasks here as they land.
+Status: **APPROVED** on 2026-09-28. The owner left the open decisions to Claude; they're recorded under "Decisions" below. Tick off tasks as they land.
 
 Each task is sized for one ~1 hr session. It ends with `npm run check` green and a single commit.
 Estimate: about 41 sessions (M0 4, M1 7, M2 12, M3 13, M4 5).
@@ -29,23 +29,23 @@ tests/e2e/         Playwright
 
 ## M0: Scaffold, CI, deploy
 
-- [ ] **T0.1 Scaffold.**
+- [x] **T0.1 Scaffold.**
   - Astro 7 + React + Tailwind 4 + TS strict.
   - `astro:env` schema for the config vars, plus `.env.example`.
   - Base layout: `lang="en-IN"`, title/description/canonical props, placeholders for GSC and Bing verification meta tags, system font stack.
   - Placeholder home page and custom 404.
   - Vitest wired up. The first real test covers the half-up rounding helper.
-- [ ] **T0.2 Lint + CI.**
+- [x] **T0.2 Lint + CI.**
   - Lint/format setup (see decision 1 below).
   - `.nvmrc`.
   - GitHub Actions workflow: `npm ci`, then `npm run check`.
   - SessionStart hook in `.claude/settings.json` that runs `npm ci`, so fresh cloud sessions can run the checks.
-- [ ] **T0.3 Quality gates.**
+- [x] **T0.3 Quality gates.**
   - Playwright projects: Pixel 7 + Desktop Chrome. A smoke test runs against the built site.
   - `check-budget.mjs`: gzips every JS file a page loads eagerly (island + renderer + static imports, excluding dynamic chunks). Fails over 50 KB on content pages or 150 KB on tool pages.
   - LHCI mobile assertions: LCP ≤ 2000 ms, CLS ≤ 0.05, TBT ≤ 200 ms. TBT stands in for INP because lab runs can't measure INP; field INP comes from CF Web Analytics.
   - All of the above added to CI.
-- [ ] **T0.4 Security + deploy.**
+- [x] **T0.4 Security + deploy.**
   - `_headers`: CSP, HSTS, nosniff, Referrer-Policy, Permissions-Policy, `frame-ancestors 'none'`.
   - Spike: confirm a trivial React island hydrates under a strict CSP with no `unsafe-inline`. Use Astro's built-in CSP hashing if v7 supports it; otherwise write a post-build hash step.
   - `robots.txt`.
@@ -165,6 +165,21 @@ The remaining SEO-section items:
 
 - Micro-tools: `/gst-calculator`, `/upi-qr-generator`, `/gstin-validator`. These are cheap because the domain lib already exists.
 - Guides: GST registration, invoice numbering rules, MSME 45-day rule.
+
+## Decisions (2026-09-28)
+
+1. **Lint/format:** ESLint 10 + typescript-eslint (strict) + eslint-plugin-astro + react-hooks + Prettier (+ astro plugin). For accessibility linting we use `eslint-plugin-jsx-a11y-x`, the maintained fork: the original `eslint-plugin-jsx-a11y` hasn't been published since 2024 and doesn't support ESLint 10.
+2. **Extra packages approved:** everything listed under "Need the owner's OK" below, plus `@types/node` (types only).
+3. **Deploy:** Cloudflare Pages Git integration. The owner's one-time steps are in `docs/DEPLOY.md`.
+4. **Brand:** `BRAND_NAME` placeholder ("YourBrand") until the owner picks one.
+5. **Lighthouse CI:** runs via a pinned `npx @lhci/cli@0.15.1`, not as a dev dependency. Its dependency tree has known `npm audit` findings, and keeping it out keeps our lockfile clean.
+6. **Local server:** `scripts/serve-dist.mjs` serves `dist/` the way Cloudflare Pages does, for e2e and Lighthouse. Astro 7's `preview` backgrounds itself when it detects an agent, which breaks Playwright's `webServer`.
+
+## M0 findings
+
+- The React island baseline is **69 KB gz** (react-dom client 65.5 KB). That leaves about 80 KB of the 150 KB tool-page budget for Dexie, zod/mini and the editor.
+- A strict CSP works: Astro 7's `security.csp` hashes its inline hydration script, the island hydrates, and there are no violations. `frame-ancestors` is set in `_headers`, since `<meta>` CSP can't carry it.
+- Lighthouse on mobile (placeholder home): 100/100/100/100, LCP 0.9 s, CLS 0, TBT 0 ms.
 
 ## Dependencies
 

@@ -1,5 +1,6 @@
 ---
 import { BRAND_NAME } from 'astro:env/client';
+import HydrationProbe from '../components/dev/HydrationProbe';
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
@@ -11,4 +12,5 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <p class="mt-3 max-w-prose text-slate-700">
     A correct invoice from your phone in 2 minutes, and get paid in full.
   </p>
+  <HydrationProbe client:load />
 </BaseLayout>

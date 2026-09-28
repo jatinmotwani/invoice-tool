@@ -12,7 +12,30 @@ export default defineConfig({
   build: { format: 'file' },
   trailingSlash: 'never',
   integrations: [react()],
+  // Shiki emits inline styles, which the strict CSP forbids; guides don't need code highlighting.
+  markdown: { syntaxHighlight: false },
   vite: { plugins: [tailwindcss()] },
+  // Strict CSP as a <meta> tag with hashes for every script/style Astro emits (no 'unsafe-inline').
+  // frame-ancestors can't be set from <meta>; it lives in public/_headers with the other security headers.
+  // The only third party is the Cloudflare Web Analytics beacon (auto-injected by Cloudflare Pages).
+  security: {
+    csp: {
+      algorithm: 'SHA-256',
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data: blob:",
+        "font-src 'self'",
+        "connect-src 'self' https://cloudflareinsights.com",
+        "worker-src 'self' blob:",
+        "manifest-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ],
+      scriptDirective: { resources: ["'self'", 'https://static.cloudflareinsights.com'] },
+      styleDirective: { resources: ["'self'"] },
+    },
+  },
   env: {
     schema: {
       BRAND_NAME: envField.string({ context: 'client', access: 'public', default: 'YourBrand' }),
