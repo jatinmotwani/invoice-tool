@@ -5,7 +5,7 @@ Spec: `docs/SPEC.md` (source of truth). Plan and task list: `docs/PLAN.md`.
 
 ## Current milestone
 
-**M2 (editor).** M0 and M1 are done. Still waiting on the owner: the one-time Cloudflare Pages setup (`docs/DEPLOY.md`) and the tax fact review (`docs/VERIFY.md`). Next task: see `docs/PLAN.md`.
+**M3 (SEO pages), not started. The owner reviews M0–M2 first.** M0, M1 and M2 are done. Still waiting on the owner: the one-time Cloudflare Pages setup (`docs/DEPLOY.md`) and the tax fact review (`docs/VERIFY.md`). Next task: see `docs/PLAN.md`.
 
 ## Stack
 
@@ -31,7 +31,7 @@ npm run check        # typecheck + lint + test + build: the "green" gate for eve
 npm run test:e2e     # playwright (needs a build)
 npm run budget       # JS size budget check over dist/
 npm run lhci         # lighthouse CI (mobile) over dist/
-npm run serve        # serve dist/ like Cloudflare Pages (clean URLs, 404, _headers)
+npm run serve        # serve dist/ like Cloudflare Pages (clean URLs, 404, _headers, compression)
 ```
 
 In cloud sessions the SessionStart hook sets `PW_CHROMIUM_EXECUTABLE` and `CHROME_PATH` to the pre-installed Chromium.
@@ -48,4 +48,5 @@ In cloud sessions the SessionStart hook sets `PW_CHROMIUM_EXECUTABLE` and `CHROM
 - **Privacy:** invoice data never goes into a network request, URL or analytics. No cookies.
 - **Content pages:** static HTML, one H1, title ≤ 60 chars, description ≤ 155. Content must never depend on JS. Micro-tools use small vanilla `<script>`s, not React.
 - **Config:** use `astro:env` (`BRAND_NAME`, `SITE_URL`, `DONATION_UPI_VPA`, `DONATION_PAYEE_NAME`, `CONTACT_EMAIL`) with defaults in `.env.example`. Never hard-code the brand.
+- **E2E:** wait for hydration with `editorReady(page)` from `tests/e2e/helpers.ts`, not `toBeEnabled()` on a fieldset.
 - **Accessibility:** every input has a label, tap targets are ≥ 44 px, contrast meets AA, and everything works by keyboard.

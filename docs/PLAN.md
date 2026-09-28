@@ -93,28 +93,28 @@ tests/e2e/         Playwright
 
 ## M2: Editor, preview, PDF, persistence
 
-- [ ] **T2.1 Dexie DB.** Schema v1 (profile, clients, invoices, counters, settings), migration harness, `storage.persist()`, repositories. Tests use fake-indexeddb.
-- [ ] **T2.2 Editor shell.**
+- [x] **T2.1 Dexie DB.** Schema v1 (profile, clients, invoices, counters, settings), migration harness, `storage.persist()`, repositories. Tests use fake-indexeddb.
+- [x] **T2.2 Editor shell.**
   - Island on `/`: Edit/Preview tabs on mobile, split view on desktop.
   - Reducer-based state; debounced autosave of drafts.
   - The server-rendered default must be the same size as the hydrated editor, so there's no layout shift (CLS).
-- [ ] **T2.3 Profile + client forms.** GSTIN auto-fills state and PAN. Registered toggle, country select, and a live badge showing the tax mode.
-- [ ] **T2.4 Line items.** SAC picker (datalist + free text), qty, unit, rate, discount, GST rate per line. Keyboard add/remove. Notes/terms and due-date terms.
-- [ ] **T2.5 HTML preview (template A).** Renders from the view-model. Print CSS (A4 `@page`) and the Print action.
-- [ ] **T2.6 PDF.**
+- [x] **T2.3 Profile + client forms.** GSTIN auto-fills state and PAN. Registered toggle, country select, and a live badge showing the tax mode.
+- [x] **T2.4 Line items.** SAC picker (datalist + free text), qty, unit, rate, discount, GST rate per line. Keyboard add/remove. Notes/terms and due-date terms.
+- [x] **T2.5 HTML preview (template A).** Renders from the view-model. Print CSS (A4 `@page`) and the Print action.
+- [x] **T2.6 PDF.**
   - react-pdf document that mirrors template A, behind a lazy `import()`.
   - Noto Sans Regular/Bold subset (Latin + ₹), A4, selectable text.
   - Confirm the lazy chunk stays out of the budget and works under the CSP (yoga may need `wasm-unsafe-eval`).
-- [ ] **T2.7 Export + LUT.**
+- [x] **T2.7 Export + LUT.**
   - Currency, SWIFT/IBAN/routing, exchange rate + source/date, and the INR equivalent.
   - LUT ARN + FY and the endorsement. LUT stays hidden when the supplier is unregistered.
-- [ ] **T2.8 Payments.** Bank + UPI, QR code (lazy-loaded `qrcode`) in both preview and PDF, ₹1 lakh warning, TDS and advance lines.
-- [ ] **T2.9 Branding.**
+- [x] **T2.8 Payments.** Bank + UPI, QR code (lazy-loaded `qrcode`) in both preview and PDF, ₹1 lakh warning, TDS and advance lines.
+- [x] **T2.9 Branding.**
   - Logo resized on a canvas to ≤ 200 KB PNG/JPEG. react-pdf can't embed WebP.
   - Signature image, template B, accent colour, footer toggle.
-- [ ] **T2.10 Actions.** Numbering + duplicate warning. Share via Web Share with the PDF file; fallback is download + a `wa.me` link. Duplicate, New.
-- [ ] **T2.11 Backup.** JSON export/import (zod-validated, versioned, merge or replace). Nudge every 5 invoices; show the last-backup date.
-- [ ] **T2.12 E2E.** All three situations on mobile + desktop. Budget check on `/`.
+- [x] **T2.10 Actions.** Numbering + duplicate warning. Share via Web Share with the PDF file; fallback is download + a `wa.me` link. Duplicate, New.
+- [x] **T2.11 Backup.** JSON export/import (zod-validated, versioned, merge or replace). Nudge every 5 invoices; show the last-backup date.
+- [x] **T2.12 E2E.** All three situations on mobile + desktop. Budget check on `/`.
 
 ## M3: SEO
 
@@ -186,6 +186,17 @@ The remaining SEO-section items:
 - The domain library is `src/lib/invoice`: 150 tests; coverage 99% statements and 100% lines, with thresholds enforced in CI. `buildInvoiceView()` is the single view-model.
 - Tax facts are listed in `docs/VERIFY.md`. This environment blocks `*.gov.in`, so each carries `TODO(verify)` until the owner (or Claude, once the domains are allowed) checks the primary source.
 - **Rule 46 endorsement:** the code uses the full wording, including "/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS", and adds the "ON PAYMENT OF INTEGRATED TAX" endorsement for IGST-route exports.
+
+## M2 findings
+
+- The editor is live on `/`: it autosaves to IndexedDB, previews live, and handles PDF, print, share, duplicate, new and backup. Page JS is **122.5 KB gz** (budget 150 KB). react-pdf (440 KB gz) loads only when a PDF is made, and is warmed on idle after the first save.
+- Lighthouse mobile on `/`: 100/100/100/100, LCP 0.8 s, CLS 0, TBT ≤ 20 ms. Tests: 183 unit and 30 e2e (mobile + desktop).
+- CSP additions, both needed by react-pdf: `'wasm-unsafe-eval'` (the yoga layout engine is WebAssembly) and `data:` in `connect-src` (for its inlined binary). Neither adds network egress.
+- Things worth knowing when changing code:
+  - Playwright treats `<fieldset>` as always enabled. Use `tests/e2e/helpers.ts#editorReady` to wait for hydration.
+  - `Intl.DisplayNames` output differs between Node and browsers, which breaks hydration; country names are a static table.
+  - `import { type X }` leaves a side-effect import that pulled zod into the bundle. It's now a lint error.
+- The amount in words is the invoice total. The net receivable after TDS and advance is shown separately, and the UPI QR requests that net amount.
 
 ## Dependencies
 
