@@ -1,0 +1,12 @@
+---
+import { BRAND_NAME } from 'astro:env/client';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title={`Free Invoice Generator for Freelancers | ${BRAND_NAME}`}
+  description="Make a correct invoice from your phone in 2 minutes: GST, non-GST and export invoices. No signup, and your data stays in your browser."
+>
+  <h1 class="text-2xl font-bold">Free invoice generator for Indian freelancers</h1>
+  <p class="mt-3 max-w-prose text-slate-700">A correct invoice from your phone in 2 minutes, and get paid in full.</p>
+</BaseLayout>

@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+/* System font stack (Tailwind's default font-sans): no font download, no layout shift. */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-white font-sans text-slate-900 antialiased;
+  }
+}

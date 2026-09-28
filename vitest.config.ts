@@ -1,0 +1,11 @@
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
+    coverage: {
+      include: ['src/lib/invoice/**/*.ts'],
+      exclude: ['src/lib/invoice/**/*.test.ts'],
+    },
+  },
+});

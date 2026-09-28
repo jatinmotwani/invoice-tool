@@ -1,0 +1,55 @@
+---
+import { BRAND_NAME } from 'astro:env/client';
+import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION, SITE_INDEXABLE, SITE_URL } from 'astro:env/server';
+import '../styles/global.css';
+
+interface Props {
+  /** Full <title>, ≤ 60 characters. */
+  title: string;
+  /** Meta description, ≤ 155 characters. */
+  description: string;
+  /** Force noindex (e.g. 404) even when the site is indexable. */
+  noindex?: boolean;
+}
+
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/'), SITE_URL).href;
+const robots = SITE_INDEXABLE && !noindex ? 'index, follow' : 'noindex, nofollow';
+---
+
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content={robots} />
+    <meta name="theme-color" content="#ffffff" />
+    <meta property="og:site_name" content={BRAND_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_IN" />
+    {GOOGLE_SITE_VERIFICATION && <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />}
+    {BING_SITE_VERIFICATION && <meta name="msvalidate.01" content={BING_SITE_VERIFICATION} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <header class="border-b border-slate-200">
+      <div class="mx-auto flex h-14 max-w-5xl items-center px-4">
+        <a href="/" class="text-lg font-semibold text-slate-900">{BRAND_NAME}</a>
+      </div>
+    </header>
+    <main id="main" class="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+      <slot />
+    </main>
+    <footer class="border-t border-slate-200">
+      <div class="mx-auto max-w-5xl px-4 py-6 text-sm text-slate-600">
+        <p>Your invoices never leave this device. Not tax advice.</p>
+      </div>
+    </footer>
+  </body>
+</html>
