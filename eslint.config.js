@@ -21,6 +21,14 @@ export default defineConfig(
     },
   },
   {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { require: 'readonly', module: 'writable', __dirname: 'readonly' },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
     rules: {
       // Money maths must be explicit: no silent float coercion via `==`.
       eqeqeq: ['error', 'always'],

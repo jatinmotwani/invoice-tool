@@ -15,7 +15,11 @@
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run lint && npm test && npm run build",
     "lint": "eslint . && prettier --check .",
-    "format": "prettier --write . && eslint . --fix"
+    "format": "prettier --write . && eslint . --fix",
+    "test:e2e": "playwright test",
+    "serve": "node scripts/serve-dist.mjs",
+    "budget": "node scripts/check-budget.mjs",
+    "lhci": "npx -y @lhci/cli@0.15.1 autorun"
   },
   "dependencies": {
     "@astrojs/react": "^7.0.0",
@@ -28,6 +32,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
