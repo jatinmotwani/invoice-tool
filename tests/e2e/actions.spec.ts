@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { crc32, deflateSync } from 'node:zlib';
-import { editorReady } from './helpers';
+import { clickAction, editorReady, expectSaved } from './helpers';
 import { expect, type Page, test } from '@playwright/test';
 
 /** Minimal valid RGBA PNG of a solid colour. */
@@ -37,7 +37,7 @@ async function fillBasics(page: Page, client = 'Acme Pvt Ltd') {
   await page.getByLabel('Client name').fill(client);
   await page.getByLabel('Description').first().fill('Logo design');
   await page.getByLabel('Rate', { exact: true }).first().fill('25000');
-  await expect(page.getByText('Saved on this device', { exact: true })).toBeVisible();
+  await expectSaved(page);
 }
 
 test('logo is resized on-device and shown on the invoice', async ({ page }) => {
@@ -63,12 +63,12 @@ test('Duplicate and New take the next number in the series', async ({ page }) =>
   await open(page);
   await fillBasics(page);
   await expect(page.getByLabel('Invoice number')).toHaveValue('INV/26-27/001');
-  await page.getByRole('button', { name: 'Duplicate' }).click();
+  await clickAction(page, 'Duplicate');
   await expect(page.getByLabel('Invoice number')).toHaveValue('INV/26-27/002');
   await expect(page.getByLabel('Client name')).toHaveValue('Acme Pvt Ltd');
   await page.getByLabel('Description').first().fill('Revisions');
-  await expect(page.getByText('Saved on this device', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await expectSaved(page);
+  await clickAction(page, 'New');
   await expect(page.getByLabel('Invoice number')).toHaveValue('INV/26-27/003');
   await expect(page.getByLabel('Client name')).toHaveValue('');
   // Saved client is offered for the next invoice.

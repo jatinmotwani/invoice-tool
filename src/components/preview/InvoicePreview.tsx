@@ -171,7 +171,7 @@ export default function InvoicePreview({ view, appearance, qr }: Props) {
                   GST
                 </th>
               )}
-              <th scope="col" className="py-2 text-right font-semibold">
+              <th scope="col" className="py-2 text-right font-semibold whitespace-nowrap">
                 {view.moneyHeader}
               </th>
             </tr>

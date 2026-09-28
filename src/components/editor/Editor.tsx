@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getDb } from '../../lib/db/db';
 import { getMeta, setMeta } from '../../lib/db/repo';
 import { duplicateInvoice, newInvoice } from '../../lib/invoice/factory';
@@ -33,6 +33,12 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
   const { state, dispatch, ready, status, loadError, flush } = usePersistentEditor(preset, today);
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [pdfState, setPdfState] = useState<'idle' | 'working' | 'error'>('idle');
+  const moreMenu = useRef<HTMLDetailsElement>(null);
+  /** Run a "More" menu action and close the menu. */
+  const fromMenu = (fn: () => void) => () => {
+    if (moreMenu.current) moreMenu.current.open = false;
+    fn();
+  };
   /** Set when sharing needs one more tap (gesture expired) or when falling back to WhatsApp. */
   const [shareReady, setShareReady] = useState<{ file: File; text: string; native: boolean } | null>(null);
   const view = useMemo(() => buildInvoiceView(state.invoice, { brandName }), [state.invoice, brandName]);
@@ -158,6 +164,19 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
     );
   }
 
+  const saveText =
+    pdfState === 'error'
+      ? 'Couldn’t make the PDF. Try Print → Save as PDF.'
+      : loadError
+        ? 'Not saved (storage blocked)'
+        : status === 'saving'
+          ? 'Saving…'
+          : status === 'saved'
+            ? 'Saved on this device'
+            : status === 'error'
+              ? 'Couldn’t save'
+              : '';
+
   const toggle = (value: 'edit' | 'preview', label: string) => (
     <button
       type="button"
@@ -281,9 +300,10 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
             </Button>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="primary"
+            className="flex-1 sm:flex-none"
             onClick={() => void downloadPdf()}
             disabled={!ready || pdfState === 'working'}
           >
@@ -292,29 +312,56 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
           <Button onClick={() => void share()} disabled={!ready || pdfState === 'working'}>
             Share
           </Button>
-          <Button onClick={() => window.print()} disabled={!ready}>
-            Print
-          </Button>
-          <Button onClick={duplicate} disabled={!ready}>
-            Duplicate
-          </Button>
-          <Button onClick={startNew} disabled={!ready}>
-            New
-          </Button>
-          <p className="ml-auto text-sm text-slate-600" aria-live="polite">
-            {pdfState === 'error'
-              ? 'Couldn’t make the PDF. Try Print → Save as PDF.'
-              : loadError
-                ? 'Not saved (storage blocked)'
-                : status === 'saving'
-                  ? 'Saving…'
-                  : status === 'saved'
-                    ? 'Saved on this device'
-                    : status === 'error'
-                      ? 'Couldn’t save'
-                      : ''}
+          <div className="hidden gap-2 sm:flex">
+            <Button onClick={() => window.print()} disabled={!ready}>
+              Print
+            </Button>
+            <Button onClick={duplicate} disabled={!ready}>
+              Duplicate
+            </Button>
+            <Button onClick={startNew} disabled={!ready}>
+              New
+            </Button>
+          </div>
+          {/* Phones: secondary actions in a menu so the bar stays one row. */}
+          <details ref={moreMenu} className="relative sm:hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-md border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-600">
+              More
+            </summary>
+            <div className="absolute right-0 bottom-full mb-2 flex w-44 flex-col rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={fromMenu(() => window.print())}
+                disabled={!ready}
+              >
+                Print
+              </Button>
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={fromMenu(duplicate)}
+                disabled={!ready}
+              >
+                Duplicate
+              </Button>
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={fromMenu(startNew)}
+                disabled={!ready}
+              >
+                New invoice
+              </Button>
+            </div>
+          </details>
+          <p className="ml-auto hidden text-sm text-slate-600 sm:block" aria-live="polite">
+            {saveText}
           </p>
         </div>
+        <p className="mt-1 text-xs text-slate-600 sm:hidden" aria-hidden="true">
+          {saveText}
+        </p>
       </div>
     </div>
   );

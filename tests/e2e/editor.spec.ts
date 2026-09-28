@@ -1,4 +1,4 @@
-import { editorReady } from './helpers';
+import { editorReady, expectSaved } from './helpers';
 import { expect, type Page, test } from '@playwright/test';
 
 const GSTIN_MH = '27AAPFU0939F1ZV'; // valid checksum, Maharashtra
@@ -42,7 +42,7 @@ test('not GST-registered: plain invoice with UPI QR, saved across reloads', asyn
   await expect(paper).toContainText('Rupees Twenty-Five Thousand Only');
   await expect(paper.getByRole('img', { name: /UPI QR code/ })).toBeVisible();
 
-  await expect(page.getByText('Saved on this device', { exact: true })).toBeVisible();
+  await expectSaved(page);
   await page.reload();
   await editorReady(page);
   await showEditor(page);
