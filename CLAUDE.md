@@ -5,7 +5,7 @@ Spec: `docs/SPEC.md` (source of truth). Plan and task list: `docs/PLAN.md`.
 
 ## Current milestone
 
-**M1 (domain library).** M0 is done, except the owner's one-time Cloudflare Pages setup (`docs/DEPLOY.md`). Next task: see `docs/PLAN.md`.
+**M2 (editor).** M0 and M1 are done. Still waiting on the owner: the one-time Cloudflare Pages setup (`docs/DEPLOY.md`) and the tax fact review (`docs/VERIFY.md`). Next task: see `docs/PLAN.md`.
 
 ## Stack
 
@@ -26,7 +26,7 @@ npm run dev          # local dev server
 npm run build        # static build -> dist/
 npm run typecheck    # astro check + tsc --noEmit
 npm run lint         # lint + format check
-npm test             # vitest (domain)
+npm test             # vitest + coverage thresholds (domain)
 npm run check        # typecheck + lint + test + build: the "green" gate for every commit
 npm run test:e2e     # playwright (needs a build)
 npm run budget       # JS size budget check over dist/

@@ -55,36 +55,36 @@ tests/e2e/         Playwright
 
 ## M1: Domain library (pure, fully unit-tested)
 
-- [ ] **T1.1 Money + formatting.**
+- [x] **T1.1 Money + formatting.**
   - Types for paise/minor units, basis points and milli-quantities.
   - BigInt multiply/divide with half-up rounding.
   - INR formatting with en-IN grouping; foreign-currency formatting with en-US grouping.
   - Dates as `DD MMM YYYY`.
   - Currency table: code, symbol, major/minor unit names, minor digits.
-- [ ] **T1.2 Amount in words.**
+- [x] **T1.2 Amount in words.**
   - INR in the Indian system (lakh/crore, paise); other currencies in the international system with the correct units.
   - Required cases: 0, 0.50, 99.99, 1,00,000, 1,23,45,678.50, 10 crore+, USD cents. Also singular/plural forms.
-- [ ] **T1.3 States + GSTIN.**
+- [x] **T1.3 States + GSTIN.**
   - State/UT code table with a flag for UTs without a legislature (source cited).
   - GSTIN regex and mod-36 checksum. Decode to state + PAN + entity number; normalise input.
   - PAN regex.
-- [ ] **T1.4 Tax-mode resolver + input schema.**
+- [x] **T1.4 Tax-mode resolver + input schema.**
   - Versioned zod `InvoiceInput`.
   - Resolver returns mode, title, tax kinds, place of supply, endorsement and LUT visibility.
   - Manual place-of-supply override.
   - Table-driven tests: all 5 modes, UTGST UTs, unregistered supplier + foreign client.
-- [ ] **T1.5 Totals + view-model.**
+- [x] **T1.5 Totals + view-model.**
   - Line amount = qty × rate − discount.
   - Rate groups. CGST and SGST/UTGST each computed on the taxable value; IGST.
   - Optional round-off, TDS (base excludes GST), advance, net receivable, INR equivalent.
   - `buildInvoiceView()` returns every formatted string the renderers need.
   - Reconciliation tests: every total equals the sum of its parts.
-- [ ] **T1.6 FY + numbering.**
+- [x] **T1.6 FY + numbering.**
   - Financial year from a date.
   - Series template with an FY token (`INV/26-27/001`); next number keeps the zero padding; rollover on a new FY.
   - Validation: ≤ 16 chars, allowed charset; duplicate detection within the FY.
   - Tests around the 31 Mar / 1 Apr boundary.
-- [ ] **T1.7 UPI, TDS, terms, SAC.**
+- [x] **T1.7 UPI, TDS, terms, SAC.**
   - UPI URI builder (encoding, 2-dp amount, INR only) and the ₹1 lakh warning flag.
   - TDS presets.
   - Due date from payment terms.
@@ -169,7 +169,7 @@ The remaining SEO-section items:
 ## Decisions (2026-09-28)
 
 1. **Lint/format:** ESLint 10 + typescript-eslint (strict) + eslint-plugin-astro + react-hooks + Prettier (+ astro plugin). For accessibility linting we use `eslint-plugin-jsx-a11y-x`, the maintained fork: the original `eslint-plugin-jsx-a11y` hasn't been published since 2024 and doesn't support ESLint 10.
-2. **Extra packages approved:** everything listed under "Need the owner's OK" below, plus `@types/node` (types only).
+2. **Extra packages approved:** everything listed under "Need the owner's OK" below, plus `@types/node` (types only) and `@vitest/coverage-v8` (enforces the coverage floor in `npm test`).
 3. **Deploy:** Cloudflare Pages Git integration. The owner's one-time steps are in `docs/DEPLOY.md`.
 4. **Brand:** `BRAND_NAME` placeholder ("YourBrand") until the owner picks one.
 5. **Lighthouse CI:** runs via a pinned `npx @lhci/cli@0.15.1`, not as a dev dependency. Its dependency tree has known `npm audit` findings, and keeping it out keeps our lockfile clean.
@@ -180,6 +180,12 @@ The remaining SEO-section items:
 - The React island baseline is **69 KB gz** (react-dom client 65.5 KB). That leaves about 80 KB of the 150 KB tool-page budget for Dexie, zod/mini and the editor.
 - A strict CSP works: Astro 7's `security.csp` hashes its inline hydration script, the island hydrates, and there are no violations. `frame-ancestors` is set in `_headers`, since `<meta>` CSP can't carry it.
 - Lighthouse on mobile (placeholder home): 100/100/100/100, LCP 0.9 s, CLS 0, TBT 0 ms.
+
+## M1 findings
+
+- The domain library is `src/lib/invoice`: 150 tests; coverage 99% statements and 100% lines, with thresholds enforced in CI. `buildInvoiceView()` is the single view-model.
+- Tax facts are listed in `docs/VERIFY.md`. This environment blocks `*.gov.in`, so each carries `TODO(verify)` until the owner (or Claude, once the domains are allowed) checks the primary source.
+- **Rule 46 endorsement:** the code uses the full wording, including "/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS", and adds the "ON PAYMENT OF INTEGRATED TAX" endorsement for IGST-route exports.
 
 ## Dependencies
 
