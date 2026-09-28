@@ -1,8 +1,10 @@
 // Minimal static server for dist/ that mimics Cloudflare Pages: clean URLs (/page -> page.html),
-// redirects from *.html, custom 404.html and headers from dist/_headers. Used by e2e tests and LHCI.
+// redirects from *.html, custom 404.html, headers from dist/_headers and brotli/gzip compression of text
+// responses (Cloudflare compresses too, so Lighthouse sees realistic transfer sizes). Used by e2e tests and LHCI.
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
+import { createBrotliCompress, createGzip } from 'node:zlib';
 
 const ROOT = new URL('../dist/', import.meta.url).pathname;
 const PORT = Number(process.env.PORT ?? 4321);
@@ -94,9 +96,26 @@ function start() {
         for (const [name, value] of rule.headers) res.setHeader(name, value);
       }
     }
-    res.setHeader('Content-Type', TYPES[extname(file)] ?? 'application/octet-stream');
+    const type = TYPES[extname(file)] ?? 'application/octet-stream';
+    res.setHeader('Content-Type', type);
+    const accept = String(req.headers['accept-encoding'] ?? '');
+    const compressible = /^(text\/|application\/(json|xml|manifest)|image\/svg)/.test(type);
+    const encoding = !compressible
+      ? null
+      : /\bbr\b/.test(accept)
+        ? 'br'
+        : /\bgzip\b/.test(accept)
+          ? 'gzip'
+          : null;
+    if (encoding) {
+      res.setHeader('Content-Encoding', encoding);
+      res.setHeader('Vary', 'Accept-Encoding');
+    }
     res.writeHead(status);
-    createReadStream(file).pipe(res);
+    const body = createReadStream(file);
+    if (encoding === 'br') body.pipe(createBrotliCompress()).pipe(res);
+    else if (encoding === 'gzip') body.pipe(createGzip()).pipe(res);
+    else body.pipe(res);
   }).listen(PORT, () => console.log(`Serving dist/ on http://localhost:${PORT}`));
 }
 

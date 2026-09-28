@@ -9,7 +9,8 @@ export default defineConfig({
   site: SITE_URL,
   output: 'static',
   // /invoice-without-gst -> invoice-without-gst.html; Cloudflare Pages serves it without a trailing slash.
-  build: { format: 'file' },
+  // Inline the (small) Tailwind CSS: removes the only render-blocking request. The CSP hashes it.
+  build: { format: 'file', inlineStylesheets: 'always' },
   trailingSlash: 'never',
   integrations: [react()],
   // Shiki emits inline styles, which the strict CSP forbids; guides don't need code highlighting.
