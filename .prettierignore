@@ -1,0 +1,8 @@
+dist/
+.astro/
+coverage/
+playwright-report/
+test-results/
+.lighthouseci/
+package-lock.json
+docs/SPEC.md

@@ -16,7 +16,12 @@ export default defineConfig({
   env: {
     schema: {
       BRAND_NAME: envField.string({ context: 'client', access: 'public', default: 'YourBrand' }),
-      SITE_URL: envField.string({ context: 'server', access: 'public', url: true, default: 'https://example.com' }),
+      SITE_URL: envField.string({
+        context: 'server',
+        access: 'public',
+        url: true,
+        default: 'https://example.com',
+      }),
       CONTACT_EMAIL: envField.string({ context: 'server', access: 'public', default: 'hello@example.com' }),
       DONATION_UPI_VPA: envField.string({ context: 'client', access: 'public', default: '' }),
       DONATION_PAYEE_NAME: envField.string({ context: 'client', access: 'public', default: '' }),

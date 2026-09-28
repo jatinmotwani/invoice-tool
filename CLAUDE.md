@@ -4,9 +4,11 @@ Free, no-signup invoice tool for Indian freelancers. Static site, all data stays
 Spec: `docs/SPEC.md` (source of truth). Plan and task list: `docs/PLAN.md`.
 
 ## Current milestone
+
 **M0 (scaffold), not started.** The plan is waiting for the owner's OK. Don't write code before that.
 
 ## Stack
+
 - Astro 7 (static output) with a single React 19 island (`@astrojs/react`) for the editor. Content pages ship zero JS.
 - TypeScript strict. Pin TS 6.x because `@astrojs/check` doesn't support TS 7 yet.
 - Tailwind 4 (`@tailwindcss/vite`), system font stack for the UI.
@@ -17,6 +19,7 @@ Spec: `docs/SPEC.md` (source of truth). Plan and task list: `docs/PLAN.md`.
 - Node ≥ 22.12.
 
 ## Commands (created in M0)
+
 ```
 npm run dev          # local dev server
 npm run build        # static build -> dist/
@@ -30,6 +33,7 @@ npm run lhci         # lighthouse CI (mobile) over dist/
 ```
 
 ## Conventions
+
 - **Every task ends green** (`npm run check`) and gets its own commit. Keep tasks small enough to finish in one session.
 - **Ask before adding any dependency** that isn't in SPEC.md or already approved in PLAN.md.
 - **Tax/legal:** never invent rates, section numbers, codes or wording. Cite an official source (cbic-gst.gov.in, incometax.gov.in, npci.org.in) in a comment or frontmatter, or mark it `TODO(verify)`.

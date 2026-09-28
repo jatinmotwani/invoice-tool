@@ -6,11 +6,13 @@ Each task is sized for one ~1 hr session. It ends with `npm run check` green and
 Estimate: about 41 sessions (M0 4, M1 7, M2 12, M3 13, M4 5).
 
 ## Workflow
+
 - Work happens on a branch, with one PR per milestone into `main`. Cloudflare Pages deploys `main` as production and every other branch as a preview.
 - The site sends `noindex` until the `SITE_INDEXABLE=true` flag is set at launch (T4.5), so search engines can't index a half-built site. Preview `*.pages.dev` URLs never get indexed.
 - Content is drafted by Claude and fact-checked by the owner. Every tax or legal claim either cites a source or carries a `TODO(verify)`.
 
 ## Architecture
+
 ```
 src/lib/invoice/   pure domain: money, format, words, currencies, states, gstin, tax-mode,
                    totals, fy, numbering, upi, tds, sac, schema, view-model
@@ -26,6 +28,7 @@ tests/e2e/         Playwright
 ```
 
 ## M0: Scaffold, CI, deploy
+
 - [ ] **T0.1 Scaffold.**
   - Astro 7 + React + Tailwind 4 + TS strict.
   - `astro:env` schema for the config vars, plus `.env.example`.
@@ -51,6 +54,7 @@ tests/e2e/         Playwright
   - CF Web Analytics through Pages auto-injection, so no token lives in the repo. The CSP allows only its beacon.
 
 ## M1: Domain library (pure, fully unit-tested)
+
 - [ ] **T1.1 Money + formatting.**
   - Types for paise/minor units, basis points and milli-quantities.
   - BigInt multiply/divide with half-up rounding.
@@ -88,6 +92,7 @@ tests/e2e/         Playwright
   - Coverage of `src/lib/invoice` ≥ 95%.
 
 ## M2: Editor, preview, PDF, persistence
+
 - [ ] **T2.1 Dexie DB.** Schema v1 (profile, clients, invoices, counters, settings), migration harness, `storage.persist()`, repositories. Tests use fake-indexeddb.
 - [ ] **T2.2 Editor shell.**
   - Island on `/`: Edit/Preview tabs on mobile, split view on desktop.
@@ -112,6 +117,7 @@ tests/e2e/         Playwright
 - [ ] **T2.12 E2E.** All three situations on mobile + desktop. Budget check on `/`.
 
 ## M3: SEO
+
 - [ ] **T3.1 SEO infrastructure.**
   - `<Seo>` component that fails the build when a title or description is over its limit.
   - Breadcrumb UI + BreadcrumbList. JSON-LD for WebSite, Organization, SoftwareApplication and FAQPage.
@@ -135,6 +141,7 @@ tests/e2e/         Playwright
   - Lighthouse run over all pages.
 
 ## M4: History, support, legal, launch
+
 - [ ] **T4.1 History.** Draft/Sent/Paid are stored; Overdue is derived. Filters, mark sent/paid.
 - [ ] **T4.2 Reminders.**
   - Polite and firm reminder text.
@@ -153,11 +160,14 @@ tests/e2e/         Playwright
   - Final CSP, performance and accessibility audit.
 
 ## Proposed M5 (after launch, only if approved)
+
 The remaining SEO-section items:
+
 - Micro-tools: `/gst-calculator`, `/upi-qr-generator`, `/gstin-validator`. These are cheap because the domain lib already exists.
 - Guides: GST registration, invoice numbering rules, MSME 45-day rule.
 
 ## Dependencies
+
 - **Implied by the spec:** astro, @astrojs/react, react, react-dom, typescript (pinned 6.x), tailwindcss, @tailwindcss/vite, dexie, @react-pdf/renderer, qrcode, zod, vitest, @playwright/test, @lhci/cli.
 - **Need the owner's OK:**
   - @astrojs/check (typechecks `.astro` files)
@@ -169,6 +179,7 @@ The remaining SEO-section items:
 - **Deliberately not added:** @astrojs/sitemap (hand-rolled), dexie-react-hooks, form/date/icon libraries (icons are inline SVG).
 
 ## Risks and mitigations
+
 - **150 KB JS budget on tool pages.** React + react-dom is about 60 KB gz and Dexie about 30 KB gz. Mitigations: lazy-load `qrcode`, use `zod/mini` on the client, and measure every commit from T0.3.
 - **Strict CSP vs Astro's inline hydration script and react-pdf's WASM layout engine.** Spiked in T0.4 and T2.6.
 - **Lighthouse can't measure INP.** Gate on TBT in the lab and watch INP in the field with CF Web Analytics.
@@ -176,11 +187,13 @@ The remaining SEO-section items:
 - **Browser storage eviction, especially on iOS.** Mitigations: `storage.persist()`, the backup nudge, and an honest "data lives on this device" message.
 
 ## Tax/legal items to verify (default: coded as `TODO(verify)`)
+
 - **Rule 46 endorsement text** (CGST Rules, cbic-gst.gov.in). From memory, the rule says "SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS UNDER BOND OR LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX", with "… ON PAYMENT OF INTEGRATED TAX" for the IGST route. That means:
   - The brief's wording is a shortened form.
   - EXPORT_IGST probably needs its own endorsement too.
 
   Check this against the official text before coding.
+
 - **State code 25** (Daman & Diu before the 2020 merger into code 26). Should the decoder accept it, and should it be treated as a UTGST UT?
 - **GST rate presets beyond the 18% default.** Only add them once a CBIC notification is cited; until then the rate field is free input.
 - **Income-tax Act 2025.** The Section 393(1) mapping and the 10% / 2% rates need an incometax.gov.in citation.
