@@ -72,7 +72,7 @@ describe('buildInvoiceView — GST, other state, with TDS and advance', () => {
       { label: 'Net Receivable', value: '₹44,000.00', kind: 'net' },
     ]);
     expect(v.amountDue).toBe('₹44,000.00');
-    expect(v.amountInWords).toBe('Rupees Forty-Four Thousand Only');
+    expect(v.amountInWords).toBe('Rupees Fifty-Nine Thousand Only'); // the invoice value, not the net
   });
 
   it('builds a UPI link for the net receivable', () => {

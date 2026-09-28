@@ -15,7 +15,11 @@ export default defineConfig({
   integrations: [react()],
   // Shiki emits inline styles, which the strict CSP forbids; guides don't need code highlighting.
   markdown: { syntaxHighlight: false },
-  vite: { plugins: [tailwindcss()] },
+  vite: {
+    plugins: [tailwindcss()],
+    // react-pdf's chunk (~440 KB gz) is expected: it loads only when a PDF is made. Page JS is budgeted separately.
+    build: { chunkSizeWarningLimit: 1600 },
+  },
   // Strict CSP as a <meta> tag with hashes for every script/style Astro emits (no 'unsafe-inline').
   // frame-ancestors can't be set from <meta>; it lives in public/_headers with the other security headers.
   // The only third party is the Cloudflare Web Analytics beacon (auto-injected by Cloudflare Pages).
@@ -26,14 +30,18 @@ export default defineConfig({
         "default-src 'self'",
         "img-src 'self' data: blob:",
         "font-src 'self'",
-        "connect-src 'self' https://cloudflareinsights.com",
+        // data: lets react-pdf's WASM loader fetch its inlined binary (no network access involved).
+        "connect-src 'self' data: https://cloudflareinsights.com",
         "worker-src 'self' blob:",
         "manifest-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
       ],
-      scriptDirective: { resources: ["'self'", 'https://static.cloudflareinsights.com'] },
+      // 'wasm-unsafe-eval' lets react-pdf's layout engine (yoga, WebAssembly) compile. It does not allow JS eval.
+      scriptDirective: {
+        resources: ["'self'", "'wasm-unsafe-eval'", 'https://static.cloudflareinsights.com'],
+      },
       styleDirective: { resources: ["'self'"] },
     },
   },

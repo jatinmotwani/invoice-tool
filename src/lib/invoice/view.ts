@@ -53,8 +53,9 @@ export interface InvoiceView {
   moneyHeader: string;
   items: ItemView[];
   summary: SummaryRow[];
-  /** The figure the words describe (net receivable when deductions exist, else total). */
+  /** What the client pays: net receivable when deductions exist, else the total. */
   amountDue: string;
+  /** The invoice value (total) in words. Deductions like TDS don't change the invoice value. */
   amountInWords: string;
   inrEquivalent: string | null;
   endorsement: string | null;
@@ -257,7 +258,7 @@ export function buildInvoiceView(invoice: Invoice, options: ViewOptions): Invoic
     items,
     summary,
     amountDue: money(due),
-    amountInWords: amountInWords(Math.max(due, 0), cur),
+    amountInWords: amountInWords(Math.max(totals.grandTotal, 0), cur),
     inrEquivalent,
     endorsement: tax.endorsement,
     lut,

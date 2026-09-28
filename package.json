@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@astrojs/react": "^7.0.0",
+    "@react-pdf/renderer": "^4.9.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
     "dexie": "^4.4.6",

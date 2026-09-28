@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getDb } from '../../lib/db/db';
-import { setMeta } from '../../lib/db/repo';
+import { getMeta, setMeta } from '../../lib/db/repo';
 import { newInvoice } from '../../lib/invoice/factory';
 import { localIsoDate } from '../../lib/invoice/format';
 import type { Invoice } from '../../lib/invoice/schema';
 import { buildInvoiceView } from '../../lib/invoice/view';
 import InvoicePreview from '../preview/InvoicePreview';
+import { saveBlob } from './download';
 import { Button } from './fields';
 import { ISSUE_TEXT, MODE_SUMMARY } from './messages';
 import Adjustments from './sections/Adjustments';
@@ -28,8 +29,17 @@ interface Props {
 export default function Editor({ preset = 'default', today, brandName }: Props) {
   const { state, dispatch, ready, status, loadError, flush } = usePersistentEditor(preset, today);
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
+  const [pdfState, setPdfState] = useState<'idle' | 'working' | 'error'>('idle');
   const view = useMemo(() => buildInvoiceView(state.invoice, { brandName }), [state.invoice, brandName]);
   const { tax } = view;
+
+  // Warm the (large, lazy) PDF chunk once the user has saved something, so the first download is quick.
+  useEffect(() => {
+    if (status !== 'saved') return;
+    const warm = () => void import('../pdf/render').catch(() => undefined);
+    if ('requestIdleCallback' in window) window.requestIdleCallback(warm, { timeout: 5000 });
+    else setTimeout(warm, 2000);
+  }, [status]);
 
   async function replaceWith(invoice: Invoice) {
     await flush();
@@ -41,6 +51,35 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
       // storage unavailable: nothing to remember
     }
     window.scrollTo({ top: 0 });
+  }
+
+  async function makePdf(): Promise<{ blob: Blob; name: string }> {
+    const { renderInvoicePdf, pdfFileName } = await import('../pdf/render');
+    const blob = await renderInvoicePdf(view, state.profile.appearance);
+    return { blob, name: pdfFileName(view) };
+  }
+
+  async function countDownload() {
+    try {
+      const db = getDb();
+      await setMeta(db, 'downloads', ((await getMeta(db, 'downloads')) ?? 0) + 1);
+    } catch {
+      // storage unavailable
+    }
+  }
+
+  async function downloadPdf() {
+    setPdfState('working');
+    try {
+      void flush();
+      const { blob, name } = await makePdf();
+      saveBlob(blob, name);
+      setPdfState('idle');
+      void countDownload();
+    } catch (err) {
+      console.warn('PDF failed', err);
+      setPdfState('error');
+    }
   }
 
   function startNew() {
@@ -130,22 +169,31 @@ export default function Editor({ preset = 'default', today, brandName }: Props) 
 
       <div className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur print:hidden">
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="primary" onClick={() => window.print()} disabled={!ready}>
-            Print / Save as PDF
+          <Button
+            variant="primary"
+            onClick={() => void downloadPdf()}
+            disabled={!ready || pdfState === 'working'}
+          >
+            {pdfState === 'working' ? 'Preparing PDF…' : 'Download PDF'}
+          </Button>
+          <Button onClick={() => window.print()} disabled={!ready}>
+            Print
           </Button>
           <Button onClick={startNew} disabled={!ready}>
             New invoice
           </Button>
           <p className="ml-auto text-sm text-slate-600" aria-live="polite">
-            {loadError
-              ? 'Not saved (storage blocked)'
-              : status === 'saving'
-                ? 'Saving…'
-                : status === 'saved'
-                  ? 'Saved on this device'
-                  : status === 'error'
-                    ? 'Couldn’t save'
-                    : ''}
+            {pdfState === 'error'
+              ? 'Couldn’t make the PDF. Try Print → Save as PDF.'
+              : loadError
+                ? 'Not saved (storage blocked)'
+                : status === 'saving'
+                  ? 'Saving…'
+                  : status === 'saved'
+                    ? 'Saved on this device'
+                    : status === 'error'
+                      ? 'Couldn’t save'
+                      : ''}
           </p>
         </div>
       </div>
